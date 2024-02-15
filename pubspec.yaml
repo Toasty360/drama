@@ -10,13 +10,14 @@ dependencies:
   flutter:
     sdk: flutter
 
-  flutter_meedu_videoplayer: ^4.2.13
-
   cupertino_icons: ^1.0.2
   dio: ^5.2.1+1
   html: ^0.15.4
   flutter_launcher_icons: ^0.13.1
   carousel_slider: ^4.2.1
+  media_kit:
+  media_kit_video: ^1.2.4
+  media_kit_libs_video:
 
 dev_dependencies:
   flutter_test:

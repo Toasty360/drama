@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_meedu_videoplayer/meedu_player.dart';
 import '/model/drama.dart';
 import '/services/dramacool.dart';
 
@@ -17,7 +16,6 @@ class _DetailsPageState extends State<DetailsPage> {
   late DramaDetails item;
   bool isDataReady = false;
   bool play = false;
-  late MeeduPlayerController _meeduPlayerController;
   static Map<String, DramaDetails> tempData = {};
 
   getData() async {
@@ -106,8 +104,6 @@ class _DetailsPageState extends State<DetailsPage> {
                                 backgroundColor: const Color(0xFF17203A),
                                 body: Center(
                                   child: GestureDetector(
-                                    onVerticalDragEnd: (details) =>
-                                        context.navigator.pop(),
                                     child: Container(
                                       alignment: Alignment.bottomCenter,
                                       height: screen.height * 0.6,
@@ -191,14 +187,13 @@ class _DetailsPageState extends State<DetailsPage> {
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 10),
-                      width: screen.width,
-                      height:
-                          item.OtherNames.split(",").length > 7 ? 212 : null,
                       child: Wrap(
                           clipBehavior: Clip.antiAlias,
                           runSpacing: 8,
                           spacing: 8,
-                          children: item.OtherNames.split(",")
+                          alignment: WrapAlignment.center,
+                          children: item.OtherNames.sublist(
+                                  0, item.OtherNames.length > 10 ? 5 : null)
                               .map((element) {
                                 return Container(
                                   padding: const EdgeInsets.symmetric(
@@ -247,15 +242,15 @@ class _DetailsPageState extends State<DetailsPage> {
                               return GestureDetector(
                                 onTap: () {
                                   // print("Clicked - /movies/dramacool/watch?episodeId=${item.Episodes[index].id}&mediaId=${item.id}");
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => vidPlayer(
-                                          id: item.Episodes[index].id,
-                                          seriesid: item.id,
-                                        ),
-                                      ));
-                                  setState(() {});
+                                  // Navigator.push(
+                                  //     context,
+                                  //     MaterialPageRoute(
+                                  //       builder: (context) => vidPlayer(
+                                  //         id: item.Episodes[index].id,
+                                  //         seriesid: item.id,
+                                  //       ),
+                                  //     ));
+                                  // setState(() {});
                                 },
                                 child: Container(
                                     alignment: Alignment.center,
@@ -307,6 +302,5 @@ class _DetailsPageState extends State<DetailsPage> {
   @override
   void dispose() {
     super.dispose();
-    play ? _meeduPlayerController.dispose() : true;
   }
 }

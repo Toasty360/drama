@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../components/detailsPage.dart';
@@ -6,7 +8,9 @@ import '../model/drama.dart';
 import '../services/dramacool.dart';
 
 class Home extends StatefulWidget {
-  const Home({super.key});
+  final Future<List<Drama>> popular;
+  final Future<List<Drama>> spotlight;
+  const Home({super.key, required this.popular, required this.spotlight});
 
   @override
   State<Home> createState() => _HomeState();
@@ -17,23 +21,21 @@ class _HomeState extends State<Home> {
 
   List<Drama> data = [];
   static List<Drama> popular = [];
-  List<Drama> searchData = [];
   List<Drama> spotlight = [];
   bool isSearch = false;
   bool isSearching = false;
   bool toggelSearch = false;
 
-  fetchPopular() async {
-    await DramaCool.popular().then((value) {
-      data = value;
-      popular = data;
-      setState(() {});
-    });
-  }
+  // fetchPopular() async {
+  //   await DramaCool.popular().then((value) {
+  //     data = value;
+  //     popular = data;
+  //     setState(() {});
+  //   });
+  // }
 
   fetchSearchData(name) async {
     await DramaCool.fetchSearchData(name).then((value) {
-      searchData = value;
       data = value;
       isSearching = false;
       setState(() {});
@@ -42,10 +44,16 @@ class _HomeState extends State<Home> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    fetchPopular();
-    DramaCool.spotlight().then((value) => spotlight = value);
+    widget.spotlight.then((value) {
+      spotlight = value;
+      setState(() {});
+    });
+    widget.popular.then((value) {
+      data = value;
+      popular = data;
+      setState(() {});
+    });
   }
 
   @override
@@ -56,6 +64,7 @@ class _HomeState extends State<Home> {
     final screen = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
+        elevation: 0,
         title: GestureDetector(
             onTap: () {
               isSearch = false;
@@ -65,25 +74,9 @@ class _HomeState extends State<Home> {
               _controller.clear();
               setState(() {});
             },
-            child: Container(
-              width: 175,
-              child: const Stack(
-                children: [
-                  Text(
-                    "D R A M A T I C",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, color: Colors.blue),
-                  ),
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: Text(
-                      "Beta!",
-                      style: TextStyle(color: Colors.grey, fontSize: 10),
-                    ),
-                  )
-                ],
-              ),
+            child: Text(
+              "Val",
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
             )),
         actions: [
           IconButton(
@@ -94,8 +87,8 @@ class _HomeState extends State<Home> {
               },
               icon: Icon(!isSearch ? Icons.search : Icons.cancel)),
         ],
+        backgroundColor: Colors.transparent,
       ),
-      backgroundColor: const Color(0xFF17203A),
       body: Container(
         margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 0),
         width: screen.width,
@@ -207,7 +200,7 @@ class _HomeState extends State<Home> {
                                       Positioned(
                                           top: 0,
                                           child: Container(
-                                            height: 200,
+                                            height: 300,
                                             decoration: BoxDecoration(
                                               gradient: const LinearGradient(
                                                   begin: Alignment.topCenter,
@@ -251,8 +244,10 @@ class _HomeState extends State<Home> {
                                   ));
                             },
                             options: CarouselOptions(
+                                height: 200,
                                 pauseAutoPlayOnManualNavigate: true,
                                 autoPlay: true,
+                                aspectRatio: 1,
                                 autoPlayAnimationDuration:
                                     const Duration(seconds: 1),
                                 viewportFraction: 1,

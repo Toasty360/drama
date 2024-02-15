@@ -3,6 +3,7 @@ class Drama {
   final String title;
   final String url;
   final String image;
+  String? epsnumber;
 
   Drama(this.id, this.title, this.url, this.image);
 }
@@ -20,7 +21,7 @@ class EpisodeDetails {
 class DramaDetails {
   final String id;
   final String title;
-  final String OtherNames;
+  final List OtherNames;
   final String image;
   final String des;
   final String releaseDate;

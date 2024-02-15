@@ -25,37 +25,36 @@ import 'package:html/parser.dart';
 import '/model/drama.dart';
 
 class DramaCool {
+  static String baseurl = "https://www.dramacool.pa";
   static Future<List<Drama>> popular() async {
-    final Response v =
-        await Dio().get("https://dramacool.hr/most-popular-drama");
-    var doc = parse(v.data);
+    try {
+      final Response v = await Dio().get("$baseurl/most-popular-drama",
+          options: Options(headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Referer": baseurl
+          }));
+      var doc = parse(v.data);
 
-    List<Drama> items = [];
+      List<Drama> items = [];
 
-    for (Element e in doc.querySelectorAll(".list-episode-item > li")) {
-      var id = e.querySelector("a")!.attributes["href"] ?? "";
-      items.add(Drama(
-          id,
-          e.querySelector("h3")!.text,
-          'https://dramacool.hr$id',
-          e.querySelector("a > img")!.attributes["data-original"] ?? ""));
-    }
-    print(items.length);
-    print(items[0].image);
-    return items;
+      for (Element e in doc.querySelectorAll(".list-episode-item > li")) {
+        var id = e.querySelector("a")!.attributes["href"] ?? "";
+        items.add(Drama(id, e.querySelector("h3")!.text, '$baseurl$id',
+            e.querySelector("a > img")!.attributes["data-original"] ?? ""));
+      }
+      return items;
+    } catch (e) {}
+    return [];
   }
 
   static Future<List<Drama>> spotlight() async {
-    final Response v = await Dio().get("https://dramacool.pa/");
-    var doc = parse(v.data);
+    final Response v =
+        await Dio().get("https://valerien-api.vercel.app/drama/trending");
+
     List<Drama> items = [];
-    for (Element e in doc.querySelectorAll(".ls-slide")) {
-      items.add(Drama(
-          e.querySelector("a")!.attributes["href"]!.split("/").last,
-          e.querySelector("img")!.attributes["title"]!,
-          "",
-          e.querySelector("img")!.attributes["src"]!));
-    }
+    v.data.forEach((e) {
+      items.add(Drama(e["id"], e["title"], e["description"], e["image"]));
+    });
     return items;
   }
 
@@ -67,7 +66,8 @@ class DramaCool {
     print("/movies/dramacool/info?id=$id");
     String url = "https://toasty-kun.vercel.app/movies/dramacool/info?id=$id";
 
-    final Response v = await Dio().get(url);
+    final Response v = await Dio().get(url,
+        options: Options(headers: {"Access-Control-Allow-Origin": "*"}));
     List<EpisodeDetails> epslist = [];
     for (Map e in v.data["episodes"]) {
       epslist.add(EpisodeDetails(e['id'], e['title'], e['episode'].toString(),
@@ -77,7 +77,7 @@ class DramaCool {
     return DramaDetails(
         v.data['id'],
         v.data['title'],
-        v.data['otherNames'].toString().replaceAll(RegExp(r'\]\['), ""),
+        v.data['otherNames'],
         v.data['image'],
         v.data['description'].toString().replaceAll(RegExp(r'/\n/\b/\t'), ""),
         v.data['releaseDate'],
@@ -85,10 +85,13 @@ class DramaCool {
   }
 
   static Future<DramaDetails> fetchInfo(String id) async {
-    print(id);
-    final Response v = await Dio().get("https://dramacool.pa/$id");
+    id = id.startsWith("drama-detail") || id.startsWith("/drama-detail")
+        ? id
+        : "drama-detail/$id";
+    print("$baseurl/$id");
+    final Response v = await Dio().get("$baseurl/$id");
     var doc = parse(v.data);
-    // List<EpisodeDetails> eps = [];
+
     Map<String, dynamic> data = {};
 
     data["image"] = doc.querySelector(".img > img")?.attributes['src'];
@@ -98,8 +101,13 @@ class DramaCool {
     doc.querySelectorAll(".details .other_name > a").forEach((element) {
       data["otherNames"].add(element.text);
     });
-
-    data["description"] = doc.querySelector(".info > p:nth-child(4)")?.text;
+    print(doc.querySelectorAll(".info > p").length);
+    data["description"] = doc
+        .querySelectorAll(".info > p")
+        .where((paragraph) => !paragraph.querySelector('span')!.hasChildNodes())
+        .map((paragraph) => paragraph.text)
+        .toList()
+        .join("\n");
     data["status"] = doc.querySelector(".info > p:nth-child(6) > a")?.text;
     data["year"] = doc.querySelector(".info > p:nth-child(7) > a")?.text;
 
@@ -148,7 +156,7 @@ class DramaCool {
         doc
             .querySelectorAll(".other_name > a")
             .map((element) => element.text)
-            .toString(),
+            .toList(),
         doc.querySelector(".img > img")!.attributes["src"]!,
         doc.querySelector(".info > p:nth-child(4)")?.text ?? "",
         v.data['releaseDate'],
@@ -156,20 +164,17 @@ class DramaCool {
   }
 
   static Future<dynamic> fetchLinks(epsid, movieid) async {
-    // https://api.consumet.org/movies/dramacool/watch?episodeId=duty-after-school-2023-episode-1&mediaId=drama-detail/duty-after-school
-    print(epsid);
     String url =
         "https://toasty-kun.vercel.app/movies/dramacool/watch?episodeId=$epsid";
-    print(url);
-    final Response v = await Dio().get(url);
-    print(v.statusCode);
+    final Response v = await Dio().get(url,
+        options: Options(headers: {"Access-Control-Allow-Origin": "*"}));
     return v.data["sources"];
   }
 
   static Future<List<Drama>> fetchSearchData(name) async {
-    // https://api.consumet.org/movies/dramacool/shadow-detective-season-2
-    final Response v =
-        await Dio().get("https://toasty-kun.vercel.app/movies/dramacool/$name");
+    final Response v = await Dio().get(
+        "https://toasty-kun.vercel.app/movies/dramacool/$name",
+        options: Options(headers: {"Access-Control-Allow-Origin": "*"}));
     List<Drama> list = [];
     for (Map e in v.data["results"]) {
       list.add(Drama(e['id'], e['title'], e['url'], e['image']));
@@ -177,5 +182,3 @@ class DramaCool {
     return list;
   }
 }
-
-// text().replace(/\n/g, "").trim(),
