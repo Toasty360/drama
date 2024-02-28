@@ -8,7 +8,7 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
   Future<List<Drama>> spotlight = DramaCool.spotlight();
-  Future<List<Drama>> popular = DramaCool.popular();
+  Future<List<Drama>> popular = DramaCool.fetchRecent();
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
     title: "Dramatic",

@@ -239,18 +239,19 @@ class _DetailsPageState extends State<DetailsPage> {
                             physics: const ClampingScrollPhysics(),
                             itemCount: item.Episodes.length,
                             itemBuilder: (context, index) {
-                              return GestureDetector(
+                              return InkWell(
                                 onTap: () {
+                                  print(item.Episodes[index].id);
                                   // print("Clicked - /movies/dramacool/watch?episodeId=${item.Episodes[index].id}&mediaId=${item.id}");
-                                  // Navigator.push(
-                                  //     context,
-                                  //     MaterialPageRoute(
-                                  //       builder: (context) => vidPlayer(
-                                  //         id: item.Episodes[index].id,
-                                  //         seriesid: item.id,
-                                  //       ),
-                                  //     ));
-                                  // setState(() {});
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => MediaPlayer(
+                                          id: item.Episodes[index].id,
+                                          title: item.Episodes[index].title,
+                                        ),
+                                      ));
+                                  setState(() {});
                                 },
                                 child: Container(
                                     alignment: Alignment.center,

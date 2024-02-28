@@ -63,7 +63,6 @@ class DramaCool {
     id = id.startsWith("drama-detail") || id.startsWith("/drama-detail")
         ? id
         : "drama-detail/$id";
-    print("/movies/dramacool/info?id=$id");
     String url = "https://toasty-kun.vercel.app/movies/dramacool/info?id=$id";
 
     final Response v = await Dio().get(url,
@@ -163,7 +162,7 @@ class DramaCool {
         data["episodes"]);
   }
 
-  static Future<dynamic> fetchLinks(epsid, movieid) async {
+  static Future<dynamic> fetchLinks(epsid) async {
     String url =
         "https://toasty-kun.vercel.app/movies/dramacool/watch?episodeId=$epsid";
     final Response v = await Dio().get(url,
@@ -180,5 +179,17 @@ class DramaCool {
       list.add(Drama(e['id'], e['title'], e['url'], e['image']));
     }
     return list;
+  }
+
+  static Future<List<Drama>> fetchRecent() async {
+    final Response v =
+        await Dio().get("https://valerien-api.vercel.app/drama/recent");
+    List<Drama> data = [];
+    v.data.forEach((e) {
+      var _item = Drama(e["id"], e["title"], e["time"], e["image"]);
+      _item.epsnumber = e["epsNumber"].toString();
+      data.add(_item);
+    });
+    return data;
   }
 }

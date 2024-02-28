@@ -1,10 +1,14 @@
-// ignore_for_file: prefer_const_constructors
+// ignore_for_file: prefer_const_constructors, unused_import
 
 import 'dart:io';
+import 'package:Dramatic/services/dramacool.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+import 'dart:ui_web';
 
 class MediaPlayer extends StatefulWidget {
   final File? videoFile;
@@ -54,15 +58,15 @@ class _MediaPlayerState extends State<MediaPlayer> {
     super.initState();
   }
 
-  readym3u8() {
-    // AniList.fetchSteamingLinks(widget.id!).then((response) {
-    //   for (Map e in response) {
-    //     quality[e["quality"]] = e["url"];
-    //   }
-    //   player.open(
-    //       Media(currentQuality != "" ? currentQuality : quality["default"]));
-    //   setState(() {});
-    // });
+  readym3u8() async {
+    DramaCool.fetchLinks(widget.id).then(
+      (value) {
+        // print(value);
+        setState(() {
+          player.open(Media(value[0]["url"]));
+        });
+      },
+    );
   }
 
   @override
@@ -136,7 +140,7 @@ class _MediaPlayerState extends State<MediaPlayer> {
       child: Scaffold(
         backgroundColor: Color.fromARGB(0, 0, 0, 0),
         body: Video(
-          fit: BoxFit.fill,
+          fit: kIsWeb ? BoxFit.fitWidth : BoxFit.fill,
           controller: controller,
           wakelock: true,
         ),

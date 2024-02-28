@@ -18,6 +18,7 @@ dependencies:
   media_kit:
   media_kit_video: ^1.2.4
   media_kit_libs_video:
+  extended_image: ^8.2.0
 
 dev_dependencies:
   flutter_test:

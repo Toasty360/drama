@@ -1,5 +1,5 @@
 class Drama {
-  final String id;
+  String id;
   final String title;
   final String url;
   final String image;
