@@ -1,14 +1,15 @@
-import 'package:Dramatic/model/drama.dart';
-import 'package:Dramatic/services/dramacool.dart';
+import 'package:Dramatic/pages/wrapper.dart';
+import 'package:extractor/extractor.dart';
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
-import '/components/Home.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
-  Future<List<Drama>> spotlight = DramaCool.spotlight();
-  Future<List<Drama>> popular = DramaCool.fetchRecent();
+  Scraper scraper = Scraper("https://dramacool.pa/", "https://asianwiki.co");
+  Future<List<Drama>> spotlight = scraper.trending();
+  Future<List<Drama>> popular = scraper.fetchPopular();
+  Future<List<Drama>> recent = scraper.recent();
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
     title: "Dramatic",
@@ -18,6 +19,6 @@ void main() {
         brightness: Brightness.dark,
         useMaterial3: true,
         appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF17203A))),
-    home: Home(popular: popular, spotlight: spotlight),
+    home: Wrapper(popular: popular, spotlight: spotlight, recent: recent),
   ));
 }

@@ -1,14 +1,11 @@
-// ignore_for_file: prefer_const_constructors, unused_import
-
 import 'dart:io';
-import 'package:Dramatic/services/dramacool.dart';
-import 'package:dio/dio.dart';
+import 'package:extractor/extractor.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
-import 'dart:ui_web';
+import 'package:toast/toast.dart';
 
 class MediaPlayer extends StatefulWidget {
   final File? videoFile;
@@ -44,6 +41,7 @@ class _MediaPlayerState extends State<MediaPlayer> {
 
   String currentQuality = "";
   Map quality = {};
+  Scraper scraper = Scraper("https://dramacool.pa/", "https://asianwiki.co");
 
   @override
   void initState() {
@@ -59,11 +57,11 @@ class _MediaPlayerState extends State<MediaPlayer> {
   }
 
   readym3u8() async {
-    DramaCool.fetchLinks(widget.id).then(
+    scraper.fetchStreamingLinks(widget.id!, StreamProvider.Streamwish).then(
       (value) {
-        // print(value);
+        print(value);
         setState(() {
-          player.open(Media(value[0]["url"]));
+          player.open(Media(value["src"]));
         });
       },
     );
@@ -74,19 +72,19 @@ class _MediaPlayerState extends State<MediaPlayer> {
     return MaterialVideoControlsTheme(
       normal: MaterialVideoControlsThemeData(
           brightnessGesture: true,
-          padding: EdgeInsets.symmetric(horizontal: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           volumeGesture: true,
           displaySeekBar: true,
           seekOnDoubleTap: true,
           seekBarThumbSize: 12,
-          seekBarMargin: EdgeInsets.only(bottom: 20),
+          seekBarMargin: const EdgeInsets.only(bottom: 20),
           buttonBarButtonSize: 24.0,
           buttonBarButtonColor: Colors.white,
-          bottomButtonBarMargin: EdgeInsets.only(bottom: 25),
-          topButtonBarMargin: EdgeInsets.symmetric(horizontal: 0),
+          bottomButtonBarMargin: const EdgeInsets.only(bottom: 25),
+          topButtonBarMargin: const EdgeInsets.symmetric(horizontal: 0),
           topButtonBar: [
             IconButton(
-              icon: Icon(
+              icon: const Icon(
                 Icons.arrow_back,
                 color: Colors.white,
               ),
@@ -96,41 +94,67 @@ class _MediaPlayerState extends State<MediaPlayer> {
               },
             ),
             Text(widget.title!,
-                style: TextStyle(
+                style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 16)),
           ],
           bottomButtonBar: [
-            Spacer(),
+            const Spacer(),
             IconButton(
               onPressed: () {
-                player.seek(player.state.position - Duration(seconds: 10));
+                player
+                    .seek(player.state.position - const Duration(seconds: 10));
               },
-              icon: Icon(
+              icon: const Icon(
                 Icons.replay_10_sharp,
                 color: Colors.white,
               ),
             ),
             IconButton(
               onPressed: () {
-                player.seek(player.state.position + Duration(seconds: 10));
+                player
+                    .seek(player.state.position + const Duration(seconds: 10));
               },
-              icon: Icon(
+              icon: const Icon(
                 Icons.forward_10_rounded,
                 color: Colors.white,
               ),
             ),
             IconButton(
               onPressed: () {
-                player.seek(
-                    player.state.position + Duration(minutes: 1, seconds: 30));
+                player.seek(player.state.position +
+                    const Duration(minutes: 1, seconds: 30));
               },
-              icon: Icon(
+              icon: const Icon(
                 Icons.double_arrow_rounded,
                 color: Colors.white,
               ),
             ),
+            PopupMenuButton(
+                itemBuilder: (context) => StreamProvider.values
+                    .map((e) => PopupMenuItem(
+                          child: Text(e.name),
+                          onTap: () {
+                            scraper.fetchStreamingLinks(widget.id!, e).then(
+                              (value) {
+                                if (value["src"] != "not found") {
+                                  setState(() {
+                                    player.open(Media(value["src"],
+                                        httpHeaders: e !=
+                                                StreamProvider.DoodStream
+                                            ? null
+                                            : {"Referer": value["referer"]}));
+                                  });
+                                } else {
+                                  Toast.show("Media not found!");
+                                }
+                              },
+                            );
+                          },
+                        ))
+                    .toList()
+                    .cast<PopupMenuItem>())
           ]),
       fullscreen: const MaterialVideoControlsThemeData(
         displaySeekBar: true,
@@ -138,7 +162,7 @@ class _MediaPlayerState extends State<MediaPlayer> {
         automaticallyImplySkipPreviousButton: false,
       ),
       child: Scaffold(
-        backgroundColor: Color.fromARGB(0, 0, 0, 0),
+        backgroundColor: const Color.fromARGB(0, 0, 0, 0),
         body: Video(
           fit: kIsWeb ? BoxFit.fitWidth : BoxFit.fill,
           controller: controller,
