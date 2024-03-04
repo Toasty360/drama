@@ -1,7 +1,6 @@
+import 'package:Dramatic/pages/actorDetails..dart';
+import 'package:extractor/extractor.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_meedu_videoplayer/meedu_player.dart';
-import '/model/drama.dart';
-import '/services/dramacool.dart';
 
 import 'Player.dart';
 
@@ -14,29 +13,28 @@ class DetailsPage extends StatefulWidget {
 }
 
 class _DetailsPageState extends State<DetailsPage> {
-  late DramaDetails item;
+  late Drama item;
   bool isDataReady = false;
   bool play = false;
-  late MeeduPlayerController _meeduPlayerController;
-  static Map<String, DramaDetails> tempData = {};
+  static Map<String, Drama> tempData = {};
+
+  Scraper scraper = Scraper("https://dramacool.pa/", "https://asianwiki.co");
 
   getData() async {
-    // DramaCool.fetchInfo(widget.item.id);
-    print(widget.item.id);
-    DramaCool.fetchDetails(widget.item.id).then((value) {
+    scraper
+        .fetchInfo(widget.item.id!.split("/").last.split("-episode").first)
+        .then((value) {
       item = value;
-      print(item.des);
       isDataReady = true;
-      tempData[widget.item.id] = value;
-      print(value.Episodes.length);
+      tempData[widget.item.id!] = value;
       setState(() {});
     });
   }
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
+
     if (tempData.containsKey(widget.item.id)) {
       item = tempData[widget.item.id]!;
       isDataReady = true;
@@ -51,9 +49,9 @@ class _DetailsPageState extends State<DetailsPage> {
     final Size screen = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF17203A),
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(widget.item.title),
+        title: Text(widget.item.title!),
         backgroundColor: Colors.transparent,
       ),
       resizeToAvoidBottomInset: false,
@@ -67,7 +65,6 @@ class _DetailsPageState extends State<DetailsPage> {
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
                 shape: BoxShape.rectangle,
-                color: const Color.fromARGB(255, 104, 131, 211),
                 boxShadow: const [
                   BoxShadow(
                       color: Colors.black26,
@@ -79,7 +76,7 @@ class _DetailsPageState extends State<DetailsPage> {
                   opacity: 0.4,
                   colorFilter: const ColorFilter.srgbToLinearGamma(),
                   scale: 1.5,
-                  image: NetworkImage(widget.item.image),
+                  image: NetworkImage(widget.item.image!),
                   onError: (exception, stackTrace) {
                     Container(
                         color: Colors.amber,
@@ -106,8 +103,7 @@ class _DetailsPageState extends State<DetailsPage> {
                                 backgroundColor: const Color(0xFF17203A),
                                 body: Center(
                                   child: GestureDetector(
-                                    onVerticalDragEnd: (details) =>
-                                        context.navigator.pop(),
+                                    onDoubleTap: () => Navigator.pop(context),
                                     child: Container(
                                       alignment: Alignment.bottomCenter,
                                       height: screen.height * 0.6,
@@ -125,8 +121,8 @@ class _DetailsPageState extends State<DetailsPage> {
                                           image: DecorationImage(
                                               fit: BoxFit.cover,
                                               image: NetworkImage(isDataReady
-                                                  ? item.image
-                                                  : widget.item.image))),
+                                                  ? item.image!
+                                                  : widget.item.image!))),
                                     ),
                                   ),
                                 ),
@@ -146,7 +142,7 @@ class _DetailsPageState extends State<DetailsPage> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(10.0),
                           child: Image.network(
-                            isDataReady ? item.image : widget.item.image,
+                            isDataReady ? item.image! : widget.item.image!,
                             fit: BoxFit.cover,
                             height: 400,
                             errorBuilder: (ctx, error, stackTrace) {
@@ -165,12 +161,11 @@ class _DetailsPageState extends State<DetailsPage> {
                   ),
                 ),
                 Container(
-                  // decoration: BoxDecoration(border: Border.all(width: 10, color: Colors.black)),
                   alignment: Alignment.center,
                   width: screen.width * 0.55,
                   padding: const EdgeInsets.only(left: 10),
                   child: Text(
-                    widget.item.title,
+                    widget.item.title!,
                     style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
@@ -189,16 +184,61 @@ class _DetailsPageState extends State<DetailsPage> {
                   physics: const ClampingScrollPhysics(),
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 10),
-                      width: screen.width,
-                      height:
-                          item.OtherNames.split(",").length > 7 ? 212 : null,
+                      padding: const EdgeInsets.only(top: 10, bottom: 10),
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 2, horizontal: 5),
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.white38)),
+                              child: Text(item.year!),
+                            ),
+                            Container(
+                              margin:
+                                  const EdgeInsets.symmetric(horizontal: 10),
+                              width: 2,
+                              height: 20,
+                              color: Colors.grey,
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 2, horizontal: 5),
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.white38)),
+                              child: Text(item.country!),
+                            ),
+                            Container(
+                              margin:
+                                  const EdgeInsets.symmetric(horizontal: 10),
+                              width: 2,
+                              height: 20,
+                              color: Colors.grey,
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 2, horizontal: 5),
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.white38)),
+                              child: Text(item.status!),
+                            )
+                          ]),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: Wrap(
                           clipBehavior: Clip.antiAlias,
                           runSpacing: 8,
                           spacing: 8,
-                          children: item.OtherNames.split(",")
+                          alignment: WrapAlignment.center,
+                          children: item.altTitles!
+                              .sublist(
+                                  0, item.altTitles!.length > 10 ? 5 : null)
                               .map((element) {
                                 return Container(
                                   padding: const EdgeInsets.symmetric(
@@ -214,6 +254,20 @@ class _DetailsPageState extends State<DetailsPage> {
                               .toList()
                               .cast<Widget>()),
                     ),
+                    item.genre!.isNotEmpty
+                        ? SizedBox(
+                            width: screen.width,
+                            child: ListTile(
+                              title: const Text(
+                                "Genres :",
+                                style: TextStyle(color: Colors.greenAccent),
+                              ),
+                              subtitle: Text(
+                                item.genre!.join(", "),
+                              ),
+                            ),
+                          )
+                        : const Center(),
                     SizedBox(
                       width: screen.width,
                       child: ListTile(
@@ -222,10 +276,86 @@ class _DetailsPageState extends State<DetailsPage> {
                           style: TextStyle(color: Colors.greenAccent),
                         ),
                         subtitle: Text(
-                          item.des,
-                          textAlign: TextAlign.justify,
+                          item.description!,
                         ),
                       ),
+                    ),
+                    item.actors.runtimeType != Null && item.actors!.isNotEmpty
+                        ? Container(
+                            padding: const EdgeInsets.only(left: 20),
+                            decoration: BoxDecoration(border: Border.all()),
+                            height: 200,
+                            width: screen.width,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "Actors :",
+                                  style: TextStyle(
+                                      color: Colors.greenAccent, fontSize: 16),
+                                ),
+                                Expanded(
+                                  child: ListView(
+                                    shrinkWrap: true,
+                                    scrollDirection: Axis.horizontal,
+                                    physics: const ClampingScrollPhysics(),
+                                    children: item.actors!
+                                        .map((e) => InkWell(
+                                              onTap: () => Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        ActorDetails(actor: e),
+                                                  )),
+                                              mouseCursor:
+                                                  SystemMouseCursors.click,
+                                              child: Container(
+                                                margin: const EdgeInsets.only(
+                                                    right: 5),
+                                                alignment: Alignment.center,
+                                                height: 200,
+                                                width: 100,
+                                                child: Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceEvenly,
+                                                  children: [
+                                                    Container(
+                                                      width: 100,
+                                                      height: 100,
+                                                      decoration: BoxDecoration(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(50),
+                                                          image: DecorationImage(
+                                                              fit: BoxFit.cover,
+                                                              alignment:
+                                                                  Alignment
+                                                                      .topCenter,
+                                                              image:
+                                                                  NetworkImage(e
+                                                                      .image!))),
+                                                    ),
+                                                    Text(
+                                                      e.name!,
+                                                      maxLines: 2,
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ))
+                                        .toList()
+                                        .cast<Widget>(),
+                                  ),
+                                )
+                              ],
+                            ),
+                          )
+                        : const Center(),
+                    const SizedBox(
+                      height: 10,
                     ),
                     Padding(
                       padding: const EdgeInsets.only(left: 18),
@@ -238,21 +368,21 @@ class _DetailsPageState extends State<DetailsPage> {
                         ),
                       ),
                     ),
-                    item.Episodes.isNotEmpty
+                    item.episodes!.isNotEmpty
                         ? ListView.builder(
                             shrinkWrap: true,
                             physics: const ClampingScrollPhysics(),
-                            itemCount: item.Episodes.length,
+                            itemCount: item.episodes!.length,
                             itemBuilder: (context, index) {
-                              return GestureDetector(
+                              return InkWell(
                                 onTap: () {
-                                  // print("Clicked - /movies/dramacool/watch?episodeId=${item.Episodes[index].id}&mediaId=${item.id}");
+                                  print(item.episodes![index].id);
                                   Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => vidPlayer(
-                                          id: item.Episodes[index].id,
-                                          seriesid: item.id,
+                                        builder: (context) => MediaPlayer(
+                                          id: item.episodes![index].id,
+                                          title: item.episodes![index].name,
                                         ),
                                       ));
                                   setState(() {});
@@ -273,7 +403,7 @@ class _DetailsPageState extends State<DetailsPage> {
                                               offset: Offset(0, 2),
                                               blurRadius: 6)
                                         ]),
-                                    child: Text(item.Episodes[index].title)),
+                                    child: Text(item.episodes![index].name!)),
                               );
                             },
                           )
@@ -307,6 +437,5 @@ class _DetailsPageState extends State<DetailsPage> {
   @override
   void dispose() {
     super.dispose();
-    play ? _meeduPlayerController.dispose() : true;
   }
 }

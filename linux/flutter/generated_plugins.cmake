@@ -3,11 +3,8 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  flutter_meedu_videoplayer
   media_kit_libs_linux
   media_kit_video
-  screen_retriever
-  window_manager
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

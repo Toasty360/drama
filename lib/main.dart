@@ -1,29 +1,24 @@
+import 'package:Dramatic/pages/wrapper.dart';
+import 'package:extractor/extractor.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_meedu_videoplayer/meedu_player.dart';
-import '/components/Home.dart';
+import 'package:media_kit/media_kit.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  initMeeduPlayer();
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    WidgetsFlutterBinding.ensureInitialized();
-    initMeeduPlayer();
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: "senpei",
-      theme: ThemeData(
-          fontFamily: 'Open_Sans',
-          brightness: Brightness.dark,
-          useMaterial3: true,
-          appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF17203A))),
-      home: const Home(),
-    );
-  }
+  MediaKit.ensureInitialized();
+  Scraper scraper = Scraper("https://dramacool.pa/", "https://asianwiki.co");
+  Future<List<Drama>> spotlight = scraper.trending();
+  Future<List<Drama>> popular = scraper.fetchPopular();
+  Future<List<Drama>> recent = scraper.recent();
+  runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
+    title: "Dramatic",
+    darkTheme: ThemeData.dark(useMaterial3: true),
+    theme: ThemeData(
+        fontFamily: 'Open_Sans',
+        brightness: Brightness.dark,
+        useMaterial3: true,
+        appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF17203A))),
+    home: Wrapper(popular: popular, spotlight: spotlight, recent: recent),
+  ));
 }
