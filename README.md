@@ -1,7 +1,7 @@
 # kdrama
 
 Drama streaming flutter application for friends.
-
+Please change the provider if the video doesn't load. 
 ## Getting Started
 
 ![home](https://media.discordapp.net/attachments/1063800002792673342/1214158831530151977/Screenshot_20240304_043009.jpg?ex=65f81887&is=65e5a387&hm=63795ce6f7f7a6fd270f094ead6ba6ef1ea632151b33bf009f84e4e926bdd255&=&format=webp&width=482&height=1072)
