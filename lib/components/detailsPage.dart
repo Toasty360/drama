@@ -1,7 +1,10 @@
 import 'package:Dramatic/pages/actorDetails..dart';
-import 'package:extractor/extractor.dart';
+import 'package:extended_image/extended_image.dart';
+import 'package:extractor/model.dart';
 import 'package:flutter/material.dart';
-
+import 'package:toast/toast.dart';
+import '../main.dart';
+import '../settings.dart';
 import 'Player.dart';
 
 class DetailsPage extends StatefulWidget {
@@ -16,23 +19,33 @@ class _DetailsPageState extends State<DetailsPage> {
   late Drama item;
   bool isDataReady = false;
   bool play = false;
+  final laterBox = WatchList.hive;
   static Map<String, Drama> tempData = {};
-
-  Scraper scraper = Scraper("https://dramacool.pa/", "https://asianwiki.co");
+  bool issaved = false;
 
   getData() async {
     scraper
-        .fetchInfo(widget.item.id!.split("/").last.split("-episode").first)
+        .fetchInfo(RegExp(r'cover\/(.*?)-(\d+)\.png')
+                .firstMatch(widget.item.image!)
+                ?.group(1) ??
+            widget.item.id!.split("/").last.split("-episode").first)
         .then((value) {
       item = value;
       isDataReady = true;
       tempData[widget.item.id!] = value;
+      if (laterBox.containsKey(widget.item.id!.split("/").last)) {
+        laterBox.put(widget.item.id!.split("/").last, value);
+      }
       setState(() {});
     });
   }
 
   @override
   void initState() {
+    issaved = laterBox.containsKey(widget.item.id!.split("/").last);
+    print(widget.item.id!.split("/").last);
+    print(issaved);
+    print(laterBox.keys.toList());
     super.initState();
 
     if (tempData.containsKey(widget.item.id)) {
@@ -53,6 +66,26 @@ class _DetailsPageState extends State<DetailsPage> {
       appBar: AppBar(
         title: Text(widget.item.title!),
         backgroundColor: Colors.transparent,
+        actions: [
+          IconButton(
+              onPressed: () {
+                setState(() {
+                  if (issaved) {
+                    laterBox.delete(widget.item.id!.split("/").last);
+                    Toast.show("Removed",
+                        backgroundColor: const Color.fromARGB(225, 31, 33, 35),
+                        textStyle: const TextStyle(color: Colors.red));
+                  } else {
+                    laterBox.put(widget.item.id!.split("/").last, item);
+                    Toast.show("Added",
+                        backgroundColor: const Color.fromARGB(225, 31, 33, 35),
+                        textStyle: const TextStyle(color: Colors.green));
+                  }
+                  issaved = !issaved;
+                });
+              },
+              icon: Icon(issaved ? Icons.bookmark : Icons.bookmark_border))
+        ],
       ),
       resizeToAvoidBottomInset: false,
       body: Container(
@@ -95,40 +128,6 @@ class _DetailsPageState extends State<DetailsPage> {
                     width: screen.width * 0.35,
                     height: 200,
                     child: InkWell(
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => Scaffold(
-                                backgroundColor: const Color(0xFF17203A),
-                                body: Center(
-                                  child: GestureDetector(
-                                    onDoubleTap: () => Navigator.pop(context),
-                                    child: Container(
-                                      alignment: Alignment.bottomCenter,
-                                      height: screen.height * 0.6,
-                                      margin: const EdgeInsets.symmetric(
-                                          horizontal: 20),
-                                      decoration: BoxDecoration(
-                                          boxShadow: const [
-                                            BoxShadow(
-                                                color: Colors.black45,
-                                                offset: Offset(0, 2),
-                                                blurRadius: 6)
-                                          ],
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          image: DecorationImage(
-                                              fit: BoxFit.cover,
-                                              image: NetworkImage(isDataReady
-                                                  ? item.image!
-                                                  : widget.item.image!))),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ));
-                      },
                       child: Container(
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
@@ -141,19 +140,10 @@ class _DetailsPageState extends State<DetailsPage> {
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(10.0),
-                          child: Image.network(
+                          child: ExtendedImage.network(
                             isDataReady ? item.image! : widget.item.image!,
                             fit: BoxFit.cover,
                             height: 400,
-                            errorBuilder: (ctx, error, stackTrace) {
-                              return Container(
-                                  color: Colors.amber,
-                                  alignment: Alignment.center,
-                                  child: const Text(
-                                    'Whoops!',
-                                    style: TextStyle(fontSize: 30),
-                                  ));
-                            },
                           ),
                         ),
                       ),
@@ -245,7 +235,7 @@ class _DetailsPageState extends State<DetailsPage> {
                                       horizontal: 10, vertical: 5),
                                   decoration: BoxDecoration(
                                     color:
-                                        const Color.fromARGB(97, 33, 149, 243),
+                                        const Color.fromARGB(225, 31, 33, 35),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(element),
@@ -381,8 +371,8 @@ class _DetailsPageState extends State<DetailsPage> {
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => MediaPlayer(
-                                          id: item.episodes![index].id,
-                                          title: item.episodes![index].name,
+                                          episode: item.episodes![index]
+                                            ..image = item.image,
                                         ),
                                       ));
                                   setState(() {});

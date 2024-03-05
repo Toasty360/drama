@@ -23,10 +23,15 @@ dependencies:
   media_kit_libs_video:
   extended_image: ^8.2.0
   toast: ^0.3.0
+  hive:
+  hive_flutter:
+  path_provider: ^2.1.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  hive_generator:
+  build_runner:
 
   flutter_lints: ^3.0.1
 

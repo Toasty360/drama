@@ -1,6 +1,9 @@
+import 'package:Dramatic/pages/homePage.dart';
 import 'package:Dramatic/pages/wrapper.dart';
-import 'package:extractor/extractor.dart';
+import 'package:extractor/model.dart';
 import 'package:flutter/material.dart';
+
+import '../settings.dart';
 
 class ActorDetails extends StatefulWidget {
   final Actor actor;
@@ -11,7 +14,6 @@ class ActorDetails extends StatefulWidget {
 }
 
 class _ActorDetailsState extends State<ActorDetails> {
-  Scraper scraper = Scraper("https://dramacool.pa/", "https://asianwiki.co");
   late Actor actor = Actor(id: "");
   @override
   void initState() {
@@ -32,7 +34,7 @@ class _ActorDetailsState extends State<ActorDetails> {
           backgroundColor: Colors.transparent,
           title: Text(widget.actor.name!)),
       backgroundColor: Colors.black,
-      body: Container(
+      body: SizedBox(
         width: screen.width,
         height: screen.height,
         child: ListView(
@@ -54,14 +56,15 @@ class _ActorDetailsState extends State<ActorDetails> {
                           image: NetworkImage(widget.actor.image!))),
                 ),
               ),
-              ...renderReamining(actor, screen),
+              ...renderReamining(actor, context),
             ]),
       ),
     );
   }
 }
 
-renderReamining(Actor actor, Size screen) {
+renderReamining(Actor actor, BuildContext context) {
+  Size screen = MediaQuery.of(context).size;
   return actor.id != ""
       ? [
           Container(
@@ -108,8 +111,8 @@ renderReamining(Actor actor, Size screen) {
             child: Text(actor.nationality!),
           ),
           const SizedBox(height: 10),
-          header("Movies"),
-          myCardList(actor.movies!, screen),
+          header("Movies", null),
+          myGrid(actor.movies!, screen, context),
           const SizedBox(height: 10)
         ]
       : [
