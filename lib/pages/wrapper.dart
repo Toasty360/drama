@@ -1,16 +1,17 @@
 // ignore_for_file: prefer_const_constructors
 
-import 'dart:math';
-
 import 'package:Dramatic/components/detailsPage.dart';
+import 'package:Dramatic/pages/homePage.dart';
+import 'package:Dramatic/pages/profilePage.dart';
+import 'package:Dramatic/pages/recentPage.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:extended_image/extended_image.dart';
-import 'package:extractor/extractor.dart';
+import 'package:extractor/model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:toast/toast.dart';
 
-import '../components/Player.dart';
+import '../settings.dart';
 
 class Wrapper extends StatefulWidget {
   final Future<List<Drama>> popular;
@@ -27,27 +28,11 @@ class Wrapper extends StatefulWidget {
 }
 
 class _WrapperState extends State<Wrapper> {
-  Scraper scraper = Scraper("https://dramacool.pa/", "https://asianwiki.co");
-  final TextEditingController _controller = TextEditingController();
-  bool toggelSearch = false;
-  bool isSearch = false;
-
-  late List<Drama> spotlight = [];
-  late List<Drama> recent = [];
-  late List<Drama> popular = [];
+  int pindex = 0;
 
   @override
   void initState() {
     super.initState();
-    loadData().then((value) {
-      setState(() {});
-    });
-  }
-
-  Future<void> loadData() async {
-    widget.spotlight.then((value) => spotlight = value);
-    widget.popular.then((value) => popular = value);
-    await widget.recent.then((value) => recent = value);
   }
 
   @override
@@ -55,73 +40,42 @@ class _WrapperState extends State<Wrapper> {
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
         systemNavigationBarColor: Colors.transparent,
         statusBarColor: Colors.transparent));
-    final screen = MediaQuery.of(context).size;
     ToastContext().init(context);
     return Scaffold(
-        backgroundColor: Colors.black,
-        appBar: AppBar(
-          elevation: 0,
-          title: GestureDetector(
-              onTap: () {
-                _controller.clear();
-                setState(() {});
-              },
-              child: const Text(
-                "Val",
-                style:
-                    TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
-              )),
-          actions: [
-            IconButton(
-                onPressed: () {
-                  toggelSearch = !toggelSearch;
-                  isSearch = !isSearch;
-                  setState(() {});
-                },
-                icon: Icon(!isSearch ? Icons.search : Icons.cancel)),
-          ],
-          backgroundColor: Colors.transparent,
+      backgroundColor: Colors.black,
+      body: [
+        HomePage(
+          scraper: scraper,
+          spotlight: widget.spotlight,
+          popular: widget.popular,
         ),
-        body: Container(
-          alignment: Alignment.center,
-          width: screen.width,
-          height: screen.height,
-          child: ListView(
-            shrinkWrap: true,
-            scrollDirection: Axis.vertical,
-            physics: ClampingScrollPhysics(),
-            children: recent.isNotEmpty
-                ? [
-                    isSearch
-                        ? Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 20),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                                color: Colors.blue.shade800,
-                                borderRadius: BorderRadius.circular(12)),
-                            child: TextField(
-                                onSubmitted: (value) {
-                                  mysnack(scraper.search(value, "1"), context);
-                                },
-                                decoration: InputDecoration(
-                                    border: InputBorder.none,
-                                    prefixIcon: Icon(Icons.search))),
-                          )
-                        : const Center(),
-                    trendingCards(context, spotlight, screen),
-                    header("Popular"),
-                    myCardList(popular, screen),
-                    header("Recent"),
-                    recentCards(recent, screen)
-                  ]
-                : [
-                    Center(
-                      child: CircularProgressIndicator(),
-                    )
-                  ],
-          ),
-        ));
+        RecentPage(recent: widget.recent),
+        ProfilePage()
+      ][pindex],
+      bottomNavigationBar: NavigationBarTheme(
+          data: NavigationBarThemeData(
+              indicatorColor: Colors.blueGrey,
+              iconTheme: MaterialStatePropertyAll(
+                  IconThemeData(color: Colors.white70)),
+              labelTextStyle: MaterialStatePropertyAll(
+                  TextStyle(fontSize: 14, fontWeight: FontWeight.w500))),
+          child: NavigationBar(
+            backgroundColor: Colors.black,
+            height: 65,
+            selectedIndex: pindex,
+            onDestinationSelected: (value) {
+              setState(() {
+                pindex = value;
+              });
+            },
+            destinations: const [
+              NavigationDestination(icon: Icon(Icons.home), label: "Home"),
+              NavigationDestination(
+                  icon: Icon(Icons.watch_later_sharp), label: "Recent"),
+              NavigationDestination(icon: Icon(Icons.person), label: "Profile"),
+            ],
+          )),
+    );
   }
 }
 
@@ -228,80 +182,7 @@ mysnack(Future<List<Drama>> fuData, BuildContext context) {
   );
 }
 
-myCardList(List<Drama> data, Size screen) {
-  return Container(
-    height: 250,
-    child: ListView.builder(
-      padding: const EdgeInsets.only(left: 10, top: 10),
-      shrinkWrap: true,
-      scrollDirection: Axis.horizontal,
-      itemCount: data.length,
-      itemBuilder: (context, index) => InkWell(
-        onTap: () => Navigator.push(context,
-            MaterialPageRoute(builder: (ctx) => DetailsPage(data[index]))),
-        child: Container(
-          width: 175,
-          padding: const EdgeInsets.only(left: 10),
-          child: Stack(children: [
-            Container(
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  image: DecorationImage(
-                    image: ExtendedNetworkImageProvider(data[index].image!,
-                        headers: {"Referer": "https://asianwiki.co"},
-                        cache: true),
-                    fit: BoxFit.cover,
-                  )),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              alignment: Alignment.bottomCenter,
-              height: double.maxFinite,
-              width: double.maxFinite,
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(5),
-                  gradient: const LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Color.fromARGB(16, 23, 24, 59),
-                        Color.fromARGB(190, 23, 24, 59),
-                      ])),
-              child: Text(
-                data[index].title!,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                    fontWeight: FontWeight.w800, color: Colors.white),
-              ),
-            ),
-          ]),
-        ),
-      ),
-    ),
-  );
-}
-
-BoxDecoration gradientBox() => BoxDecoration(
-      borderRadius: BorderRadius.circular(10.0),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x000ffeee),
-          blurRadius: 20.0,
-        ),
-      ],
-      gradient: const LinearGradient(
-        colors: [
-          Color.fromARGB(118, 141, 84, 200),
-          Color.fromARGB(148, 71, 119, 200)
-        ],
-        begin: Alignment.bottomCenter,
-        end: Alignment.topCenter,
-      ),
-    );
-
-header(String text) {
+header(String text, Widget? clear) {
   return Container(
     margin: const EdgeInsets.only(left: 20, top: 20),
     alignment: Alignment.centerLeft,
@@ -318,7 +199,9 @@ header(String text) {
             style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
-                color: Color.fromARGB(255, 229, 223, 223)))
+                color: Color.fromARGB(255, 229, 223, 223))),
+        Spacer(),
+        clear ?? const Center()
       ],
     ),
   );
@@ -333,142 +216,142 @@ trendingCards(BuildContext ctx, List<Drama> trending, Size screen) {
                     MaterialPageRoute(
                       builder: (context) => DetailsPage(e),
                     )),
-                child: Container(
-                  margin: const EdgeInsets.only(top: 10),
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            image: DecorationImage(
-                                image: NetworkImage(e.image!),
-                                fit: BoxFit.cover)),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          image: DecorationImage(
+                              image: NetworkImage(e.image!),
+                              fit: BoxFit.cover)),
+                    ),
+                    Container(
+                      alignment: Alignment.bottomCenter,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                            Color.fromARGB(16, 0, 0, 0),
+                            Color.fromARGB(255, 0, 0, 0),
+                          ])),
+                      child: Text(
+                        e.title!,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      Container(
-                        alignment: Alignment.bottomCenter,
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                              Color.fromARGB(16, 23, 24, 59),
-                              Color.fromARGB(255, 23, 24, 59),
-                            ])),
-                        child: Text(
-                          e.title!,
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ))
           .cast<Widget>()
           .toList(),
       options: CarouselOptions(
-          height: 250,
-          enlargeStrategy: CenterPageEnlargeStrategy.scale,
-          autoPlay: true,
-          enlargeCenterPage: true));
+        viewportFraction: 1,
+        enlargeCenterPage: true,
+        enlargeStrategy: CenterPageEnlargeStrategy.scale,
+        autoPlay: true,
+      ));
 }
 
-recentCards(List<Drama> recent, Size screen) {
-  return GridView.builder(
-    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-    shrinkWrap: true,
-    physics: const ClampingScrollPhysics(),
-    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: max(2, screen.width ~/ 200),
-        mainAxisSpacing: 15,
-        mainAxisExtent: 250,
-        crossAxisSpacing: 10),
-    itemCount: recent.length,
-    itemBuilder: (context, index) {
-      return Stack(children: [
-        Container(
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              image: DecorationImage(
-                image: NetworkImage(recent[index].image!),
-                fit: BoxFit.cover,
-              )),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          alignment: Alignment.bottomCenter,
-          height: double.maxFinite,
-          width: double.maxFinite,
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(5),
-              gradient: const LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Color.fromARGB(15, 23, 24, 59),
-                    Color.fromARGB(255, 23, 24, 59),
-                  ])),
-          child: Text(
-            recent[index].title!,
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontWeight: FontWeight.w800),
-          ),
-        ),
-        Container(
-          width: 40,
-          decoration: const BoxDecoration(
-              color: Color.fromARGB(107, 33, 149, 243),
-              borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(8),
-                  bottomRight: Radius.circular(8))),
-          padding: const EdgeInsets.symmetric(vertical: 5),
-          child: Text(
-            recent[index].epsNumber!.toInt().toString(),
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontWeight: FontWeight.w800),
-          ),
-        ),
-        Positioned(
-          right: 0,
-          child: Container(
-              width: 40,
-              padding: const EdgeInsets.symmetric(vertical: 5),
-              child: InkWell(
-                onTap: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => DetailsPage(recent[index]),
-                      ));
-                },
-                child: Icon(Icons.info_outline),
-              )),
-        ),
-        Center(
-            child: Container(
-          decoration: BoxDecoration(
-              color: const Color.fromARGB(87, 155, 39, 176),
-              borderRadius: BorderRadius.circular(50)),
-          child: IconButton(
-              icon: const Icon(Icons.play_arrow_rounded),
-              onPressed: () {
-                print(recent[index].id!.split("/").last);
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => MediaPlayer(
-                          id: recent[index].id!.split("/").last,
-                          title: recent[index].title),
-                    ));
-              }),
-        ))
-      ]);
-    },
-  );
-}
+
+// myCardList(List<Drama> data, Size screen) {
+//   return SizedBox(
+//     height: 250,
+//     child: ListView.builder(
+//       padding: const EdgeInsets.only(left: 10, top: 10),
+//       shrinkWrap: true,
+//       scrollDirection: Axis.horizontal,
+//       itemCount: data.length,
+//       itemBuilder: (context, index) => InkWell(
+//         onTap: () => Navigator.push(context,
+//             MaterialPageRoute(builder: (ctx) => DetailsPage(data[index]))),
+//         child: Container(
+//           width: 175,
+//           padding: const EdgeInsets.only(left: 10),
+//           child: Stack(children: [
+//             Container(
+//               decoration: BoxDecoration(
+//                   borderRadius: BorderRadius.circular(8),
+//                   image: DecorationImage(
+//                     image: ExtendedNetworkImageProvider(data[index].image!,
+//                         headers: {"Referer": "https://asianwiki.co"},
+//                         cache: true),
+//                     fit: BoxFit.cover,
+//                   )),
+//             ),
+//             Container(
+//               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+//               alignment: Alignment.bottomCenter,
+//               height: double.maxFinite,
+//               width: double.maxFinite,
+//               decoration: BoxDecoration(
+//                   borderRadius: BorderRadius.circular(5),
+//                   gradient: const LinearGradient(
+//                       begin: Alignment.topCenter,
+//                       end: Alignment.bottomCenter,
+//                       colors: [
+//                         Color.fromARGB(16, 0, 0, 0),
+//                         Color.fromARGB(189, 0, 0, 0),
+//                       ])),
+//               child: Text(
+//                 data[index].title!,
+//                 overflow: TextOverflow.ellipsis,
+//                 maxLines: 1,
+//                 textAlign: TextAlign.center,
+//                 style: const TextStyle(
+//                     fontWeight: FontWeight.w800, color: Colors.white),
+//               ),
+//             ),
+//           ]),
+//         ),
+//       ),
+//     ),
+//   );
+// }
+
+
+
+// Container(
+//         alignment: Alignment.center,
+//         width: screen.width,
+//         height: screen.height,
+//         child: ListView(
+//           shrinkWrap: true,
+//           scrollDirection: Axis.vertical,
+//           physics: ClampingScrollPhysics(),
+//           children: recent.isNotEmpty
+//               ? [
+//                   isSearch
+//                       ? Container(
+//                           margin: const EdgeInsets.symmetric(horizontal: 20),
+//                           padding: const EdgeInsets.symmetric(
+//                               horizontal: 10, vertical: 5),
+//                           decoration: BoxDecoration(
+//                               color: Colors.blue.shade800,
+//                               borderRadius: BorderRadius.circular(12)),
+//                           child: TextField(
+//                               onSubmitted: (value) {
+//                                 mysnack(scraper.search(value, "1"), context);
+//                               },
+//                               decoration: InputDecoration(
+//                                   border: InputBorder.none,
+//                                   prefixIcon: Icon(Icons.search))),
+//                         )
+//                       : const Center(),
+//                   trendingCards(context, spotlight, screen),
+//                   header("Popular"),
+//                   myCardList(popular, screen),
+//                   header("Recent"),
+//                   recentCards(recent, screen)
+//                 ]
+//               : [
+//                   Center(
+//                     child: CircularProgressIndicator(),
+//                   )
+//                 ],
+//         ),
+//       ),

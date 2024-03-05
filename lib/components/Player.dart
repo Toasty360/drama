@@ -1,25 +1,19 @@
-import 'dart:io';
-import 'package:extractor/extractor.dart';
+import 'package:Dramatic/main.dart';
+import 'package:extractor/model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:toast/toast.dart';
 
-class MediaPlayer extends StatefulWidget {
-  final File? videoFile;
-  final String? m3u8Url;
-  final String? id;
-  final String? title;
+import '../settings.dart';
 
-  const MediaPlayer({
-    super.key,
-    this.videoFile,
-    this.m3u8Url,
-    this.id,
-    this.title,
-  });
+class MediaPlayer extends StatefulWidget {
+  final Episode episode;
+
+  const MediaPlayer({super.key, required this.episode});
 
   @override
   State<MediaPlayer> createState() => _MediaPlayerState();
@@ -39,13 +33,14 @@ class _MediaPlayerState extends State<MediaPlayer> {
     ),
   );
 
+  Box<Episode> leftover = LeftOver.hive;
+  Box<String> myconstants = Constants.hive;
+
   String currentQuality = "";
   Map quality = {};
-  Scraper scraper = Scraper("https://dramacool.pa/", "https://asianwiki.co");
 
   @override
   void initState() {
-    print(widget.title);
     readym3u8();
 
     SystemChrome.setPreferredOrientations([
@@ -57,11 +52,13 @@ class _MediaPlayerState extends State<MediaPlayer> {
   }
 
   readym3u8() async {
-    scraper.fetchStreamingLinks(widget.id!, StreamProvider.Streamwish).then(
+    scraper
+        .fetchStreamingLinks(widget.episode.id!, StreamProvider.DoodStream)
+        .then(
       (value) {
-        print(value);
         setState(() {
-          player.open(Media(value["src"]));
+          player.open(
+              Media(value["src"], httpHeaders: {"Referer": value["referer"]}));
         });
       },
     );
@@ -93,7 +90,7 @@ class _MediaPlayerState extends State<MediaPlayer> {
                 player.dispose();
               },
             ),
-            Text(widget.title!,
+            Text(widget.episode.name!,
                 style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -136,7 +133,9 @@ class _MediaPlayerState extends State<MediaPlayer> {
                     .map((e) => PopupMenuItem(
                           child: Text(e.name),
                           onTap: () {
-                            scraper.fetchStreamingLinks(widget.id!, e).then(
+                            scraper
+                                .fetchStreamingLinks(widget.episode.id!, e)
+                                .then(
                               (value) {
                                 if (value["src"] != "not found") {
                                   setState(() {
@@ -176,6 +175,16 @@ class _MediaPlayerState extends State<MediaPlayer> {
   void dispose() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
+    myconstants.put(
+        "duration",
+        (int.parse(myconstants.get("duration") ?? "0") +
+                player.state.position.inMinutes)
+            .toString());
+    if (player.state.position.inMinutes <
+        player.state.duration.inMinutes * 0.8) {
+      leftover.put(widget.episode.id, widget.episode);
+    }
     player.dispose();
     super.dispose();
   }
