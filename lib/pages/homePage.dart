@@ -1,11 +1,11 @@
 import 'dart:math';
 
+import 'package:Dramatic/pages/dramaDetailsPage.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:extractor/extractor.dart';
 import 'package:extractor/model.dart';
 import 'package:flutter/material.dart';
 
-import '../components/detailsPage.dart';
 import 'wrapper.dart';
 
 class HomePage extends StatefulWidget {
@@ -110,7 +110,7 @@ myGrid(
 cards(BuildContext context, Drama item) {
   return InkWell(
     onTap: () => Navigator.push(
-        context, MaterialPageRoute(builder: (ctx) => DetailsPage(item))),
+        context, MaterialPageRoute(builder: (ctx) => Details(item))),
     child: Container(
       width: 175,
       padding: const EdgeInsets.only(left: 10),

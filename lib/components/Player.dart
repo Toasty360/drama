@@ -1,6 +1,7 @@
 import 'package:Dramatic/main.dart';
+import 'package:Dramatic/service/extractor.dart';
+import 'package:dio/dio.dart';
 import 'package:extractor/model.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -36,8 +37,8 @@ class _MediaPlayerState extends State<MediaPlayer> {
   Box<Episode> leftover = LeftOver.hive;
   Box<String> myconstants = Constants.hive;
 
-  String currentQuality = "";
-  Map quality = {};
+  List<Map<String, dynamic>> qualities = [];
+  bool showVertical = false;
 
   @override
   void initState() {
@@ -51,17 +52,57 @@ class _MediaPlayerState extends State<MediaPlayer> {
     super.initState();
   }
 
+  getQualities(String src) async {
+    try {
+      var base = "${src.substring(0, src.lastIndexOf("/"))}/";
+      src = await (await Dio().get(src)).data;
+      List<String> lines = src.split('\n');
+      for (String line in lines) {
+        if (!line.startsWith('#EXT-X-STREAM-INF') && line.contains("m3u8")) {
+          qualities.add({
+            'url': base + line,
+            'quality': "${line.split(".").reversed.toList()[1]}p",
+          });
+        }
+      }
+    } catch (e) {
+      Toast.show(e.toString());
+    }
+  }
+
   readym3u8() async {
-    scraper
-        .fetchStreamingLinks(widget.episode.id!, StreamProvider.DoodStream)
-        .then(
-      (value) {
-        setState(() {
-          player.open(
-              Media(value["src"], httpHeaders: {"Referer": value["referer"]}));
-        });
-      },
-    );
+    print(widget.episode.id);
+    try {
+      var data = await fetchSource(widget.episode.id!);
+      getQualities(data["source"][0]["file"]);
+      setState(() {
+        player.open(Media(data["source"][0]["file"]));
+      });
+    } catch (e) {
+      print(e);
+      scraper
+          .fetchStreamingLinks(widget.episode.id!, StreamProvider.DoodStream)
+          .then(
+        (value) {
+          setState(() {
+            player.open(Media(value["src"],
+                httpHeaders: {"Referer": value["referer"]}));
+          });
+        },
+      );
+    }
+  }
+
+  String formatDuration(Duration duration) {
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes % 60;
+    final seconds = duration.inSeconds % 60;
+
+    return [
+      if (hours > 0) hours.toString().padLeft(2, '0'),
+      minutes.toString().padLeft(2, '0'),
+      seconds.toString().padLeft(2, '0')
+    ].join(':');
   }
 
   @override
@@ -87,47 +128,39 @@ class _MediaPlayerState extends State<MediaPlayer> {
               ),
               onPressed: () {
                 Navigator.pop(context);
-                player.dispose();
               },
             ),
-            Text(widget.episode.name!,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16)),
-          ],
-          bottomButtonBar: [
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.5,
+              child: Text(widget.episode.name!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14)),
+            ),
             const Spacer(),
-            IconButton(
-              onPressed: () {
-                player
-                    .seek(player.state.position - const Duration(seconds: 10));
-              },
-              icon: const Icon(
-                Icons.replay_10_sharp,
-                color: Colors.white,
-              ),
-            ),
-            IconButton(
-              onPressed: () {
-                player
-                    .seek(player.state.position + const Duration(seconds: 10));
-              },
-              icon: const Icon(
-                Icons.forward_10_rounded,
-                color: Colors.white,
-              ),
-            ),
-            IconButton(
-              onPressed: () {
-                player.seek(player.state.position +
-                    const Duration(minutes: 1, seconds: 30));
-              },
-              icon: const Icon(
-                Icons.double_arrow_rounded,
-                color: Colors.white,
-              ),
-            ),
+            PopupMenuButton(
+                icon: const Icon(Icons.bar_chart_rounded),
+                tooltip: "Quality",
+                itemBuilder: (context) => qualities
+                    .map((e) => PopupMenuItem(
+                          child: Text(e["quality"]),
+                          onTap: () {
+                            var pos = player.state.position;
+                            Toast.show(e["quality"]);
+                            player.open(Media(e["url"])).then((value) {
+                              player.state.copyWith(position: pos);
+                              Future.delayed(const Duration(seconds: 1))
+                                  .then((value) {
+                                player.seek(pos);
+                              });
+                            });
+                          },
+                        ))
+                    .toList()
+                    .cast<PopupMenuItem>()),
             PopupMenuButton(
                 itemBuilder: (context) => StreamProvider.values
                     .map((e) => PopupMenuItem(
@@ -154,6 +187,65 @@ class _MediaPlayerState extends State<MediaPlayer> {
                         ))
                     .toList()
                     .cast<PopupMenuItem>())
+          ],
+          bottomButtonBar: [
+            const SizedBox(
+              width: 10,
+            ),
+            StreamBuilder(
+                stream: player.stream.position,
+                builder: (context, snapshot) {
+                  final currentPosition =
+                      snapshot.hasData ? snapshot.data! : Duration.zero;
+                  final totalDuration = player.state.duration;
+
+                  final currentPositionFormatted =
+                      formatDuration(currentPosition);
+                  final totalDurationFormatted = formatDuration(totalDuration);
+
+                  return Text(
+                      "$currentPositionFormatted / $totalDurationFormatted");
+                }),
+            const Spacer(),
+            IconButton(
+              onPressed: () {
+                player
+                    .seek(player.state.position - const Duration(seconds: 10));
+              },
+              icon: const Icon(
+                Icons.replay_10_sharp,
+                color: Colors.white,
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                player
+                    .seek(player.state.position + const Duration(seconds: 10));
+              },
+              icon: const Icon(
+                Icons.forward_10_rounded,
+                color: Colors.white,
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                if (!showVertical) {
+                  SystemChrome.setPreferredOrientations(
+                      [DeviceOrientation.portraitUp]);
+                } else {
+                  SystemChrome.setPreferredOrientations([
+                    DeviceOrientation.landscapeLeft,
+                    DeviceOrientation.landscapeRight,
+                  ]);
+                }
+                showVertical = !showVertical;
+                if (mounted) setState(() {});
+              },
+              icon: const Icon(
+                Icons.screen_rotation_rounded,
+                color: Colors.white,
+              ),
+            ),
           ]),
       fullscreen: const MaterialVideoControlsThemeData(
         displaySeekBar: true,
@@ -163,7 +255,7 @@ class _MediaPlayerState extends State<MediaPlayer> {
       child: Scaffold(
         backgroundColor: const Color.fromARGB(0, 0, 0, 0),
         body: Video(
-          fit: kIsWeb ? BoxFit.fitWidth : BoxFit.fill,
+          fit: BoxFit.fitWidth,
           controller: controller,
           wakelock: true,
         ),
@@ -175,15 +267,16 @@ class _MediaPlayerState extends State<MediaPlayer> {
   void dispose() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-
-    myconstants.put(
-        "duration",
-        (int.parse(myconstants.get("duration") ?? "0") +
-                player.state.position.inMinutes)
-            .toString());
-    if (player.state.position.inMinutes <
-        player.state.duration.inMinutes * 0.8) {
-      leftover.put(widget.episode.id, widget.episode);
+    if (mounted) {
+      myconstants.put(
+          "duration",
+          (int.parse(myconstants.get("duration") ?? "0") +
+                  player.state.position.inMinutes)
+              .toString());
+      if (player.state.position.inMinutes <
+          player.state.duration.inMinutes * 0.8) {
+        leftover.put(widget.episode.id, widget.episode);
+      }
     }
     player.dispose();
     super.dispose();

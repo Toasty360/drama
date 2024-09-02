@@ -26,6 +26,7 @@ dependencies:
   hive:
   hive_flutter:
   path_provider: ^2.1.2
+  encrypt: ^5.0.3
 
 dev_dependencies:
   flutter_test:

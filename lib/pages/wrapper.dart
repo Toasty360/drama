@@ -1,6 +1,4 @@
-// ignore_for_file: prefer_const_constructors
-
-import 'package:Dramatic/components/detailsPage.dart';
+import 'package:Dramatic/pages/dramaDetailsPage.dart';
 import 'package:Dramatic/pages/homePage.dart';
 import 'package:Dramatic/pages/profilePage.dart';
 import 'package:Dramatic/pages/recentPage.dart';
@@ -50,10 +48,10 @@ class _WrapperState extends State<Wrapper> {
           popular: widget.popular,
         ),
         RecentPage(recent: widget.recent),
-        ProfilePage()
+        const ProfilePage()
       ][pindex],
       bottomNavigationBar: NavigationBarTheme(
-          data: NavigationBarThemeData(
+          data: const NavigationBarThemeData(
               indicatorColor: Colors.blueGrey,
               iconTheme: MaterialStatePropertyAll(
                   IconThemeData(color: Colors.white70)),
@@ -90,13 +88,17 @@ mysnack(Future<List<Drama>> fuData, BuildContext context) {
     useSafeArea: true,
     barrierColor: Colors.transparent,
     showDragHandle: true,
-    shape: BeveledRectangleBorder(),
+    shape: const BeveledRectangleBorder(),
     context: context,
     builder: (context) => FutureBuilder(
       future: fuData,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           List<Drama> data = snapshot.data!;
+          if (data.isEmpty) {
+            Navigator.pop(context);
+            Toast.show("No data Found!!");
+          }
           return ListView.builder(
               shrinkWrap: true,
               itemCount: data.length,
@@ -104,7 +106,7 @@ mysnack(Future<List<Drama>> fuData, BuildContext context) {
                     onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => DetailsPage(data[index]),
+                          builder: (context) => Details(data[index]),
                         )),
                     child: Container(
                       width: screen.width,
@@ -142,11 +144,11 @@ mysnack(Future<List<Drama>> fuData, BuildContext context) {
                                     textAlign: TextAlign.center,
                                     overflow: TextOverflow.ellipsis,
                                     maxLines: 2,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                         color: Colors.green,
                                         fontWeight: FontWeight.bold),
                                   ),
-                                  SizedBox(
+                                  const SizedBox(
                                     height: 10,
                                   ),
                                   Text(
@@ -158,14 +160,15 @@ mysnack(Future<List<Drama>> fuData, BuildContext context) {
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 10, vertical: 5),
                                     decoration: BoxDecoration(
-                                        color:
-                                            Color.fromARGB(255, 212, 212, 216),
+                                        color: const Color.fromARGB(
+                                            255, 212, 212, 216),
                                         borderRadius:
                                             BorderRadius.circular(12)),
                                     child: Text(
                                       data[index].status!,
                                       textAlign: TextAlign.center,
-                                      style: TextStyle(color: Colors.black),
+                                      style:
+                                          const TextStyle(color: Colors.black),
                                     ),
                                   )
                                 ]),
@@ -187,6 +190,7 @@ header(String text, Widget? clear) {
     margin: const EdgeInsets.only(left: 20, top: 20),
     alignment: Alignment.centerLeft,
     child: Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
         Container(
@@ -200,7 +204,7 @@ header(String text, Widget? clear) {
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
                 color: Color.fromARGB(255, 229, 223, 223))),
-        Spacer(),
+        const Spacer(),
         clear ?? const Center()
       ],
     ),
@@ -214,7 +218,7 @@ trendingCards(BuildContext ctx, List<Drama> trending, Size screen) {
                 onTap: () => Navigator.push(
                     ctx,
                     MaterialPageRoute(
-                      builder: (context) => DetailsPage(e),
+                      builder: (context) => Details(e),
                     )),
                 child: Stack(
                   fit: StackFit.expand,
@@ -250,6 +254,7 @@ trendingCards(BuildContext ctx, List<Drama> trending, Size screen) {
           .cast<Widget>()
           .toList(),
       options: CarouselOptions(
+        height: 200,
         viewportFraction: 1,
         enlargeCenterPage: true,
         enlargeStrategy: CenterPageEnlargeStrategy.scale,
