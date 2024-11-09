@@ -10,5 +10,5 @@ class settings {
   static StreamProvider? provider = StreamProvider.DoodStream;
 }
 
-Scraper scraper = Scraper("https://dramacool.pa/", "https://asianwiki.co");
+Scraper scraper = Scraper("https://asianc.co/", "https://asianwiki.co");
 Color idk = const Color.fromARGB(225, 31, 33, 35);

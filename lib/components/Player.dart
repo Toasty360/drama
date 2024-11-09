@@ -29,9 +29,7 @@ class _MediaPlayerState extends State<MediaPlayer> {
   late final controller = VideoController(
     player,
     configuration: const VideoControllerConfiguration(
-      hwdec: 'auto-safe',
-      androidAttachSurfaceAfterVideoParameters: false,
-    ),
+        hwdec: 'auto-safe', enableHardwareAcceleration: true),
   );
 
   Box<Episode> leftover = LeftOver.hive;
@@ -81,7 +79,8 @@ class _MediaPlayerState extends State<MediaPlayer> {
     } catch (e) {
       print(e);
       scraper
-          .fetchStreamingLinks(widget.episode.id!, StreamProvider.DoodStream)
+          .fetchStreamingLinks(widget.episode.id!,
+              provider: StreamProvider.DoodStream)
           .then(
         (value) {
           setState(() {
@@ -91,18 +90,6 @@ class _MediaPlayerState extends State<MediaPlayer> {
         },
       );
     }
-  }
-
-  String formatDuration(Duration duration) {
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes % 60;
-    final seconds = duration.inSeconds % 60;
-
-    return [
-      if (hours > 0) hours.toString().padLeft(2, '0'),
-      minutes.toString().padLeft(2, '0'),
-      seconds.toString().padLeft(2, '0')
-    ].join(':');
   }
 
   @override
@@ -167,7 +154,8 @@ class _MediaPlayerState extends State<MediaPlayer> {
                           child: Text(e.name),
                           onTap: () {
                             scraper
-                                .fetchStreamingLinks(widget.episode.id!, e)
+                                .fetchStreamingLinks(widget.episode.id!,
+                                    provider: e)
                                 .then(
                               (value) {
                                 if (value["src"] != "not found") {
@@ -192,20 +180,7 @@ class _MediaPlayerState extends State<MediaPlayer> {
             const SizedBox(
               width: 10,
             ),
-            StreamBuilder(
-                stream: player.stream.position,
-                builder: (context, snapshot) {
-                  final currentPosition =
-                      snapshot.hasData ? snapshot.data! : Duration.zero;
-                  final totalDuration = player.state.duration;
-
-                  final currentPositionFormatted =
-                      formatDuration(currentPosition);
-                  final totalDurationFormatted = formatDuration(totalDuration);
-
-                  return Text(
-                      "$currentPositionFormatted / $totalDurationFormatted");
-                }),
+            const MaterialPositionIndicator(),
             const Spacer(),
             IconButton(
               onPressed: () {

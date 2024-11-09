@@ -1,8 +1,7 @@
 import 'package:Dramatic/pages/dramaDetailsPage.dart';
-import 'package:Dramatic/pages/homePage.dart';
+import 'package:Dramatic/pages/home_page.dart';
 import 'package:Dramatic/pages/profilePage.dart';
 import 'package:Dramatic/pages/recentPage.dart';
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:extractor/model.dart';
 import 'package:flutter/material.dart';
@@ -53,9 +52,9 @@ class _WrapperState extends State<Wrapper> {
       bottomNavigationBar: NavigationBarTheme(
           data: const NavigationBarThemeData(
               indicatorColor: Colors.blueGrey,
-              iconTheme: MaterialStatePropertyAll(
-                  IconThemeData(color: Colors.white70)),
-              labelTextStyle: MaterialStatePropertyAll(
+              iconTheme:
+                  WidgetStatePropertyAll(IconThemeData(color: Colors.white70)),
+              labelTextStyle: WidgetStatePropertyAll(
                   TextStyle(fontSize: 14, fontWeight: FontWeight.w500))),
           child: NavigationBar(
             backgroundColor: Colors.black,
@@ -211,57 +210,79 @@ header(String text, Widget? clear) {
   );
 }
 
-trendingCards(BuildContext ctx, List<Drama> trending, Size screen) {
-  return CarouselSlider(
-      items: trending
-          .map((e) => GestureDetector(
-                onTap: () => Navigator.push(
-                    ctx,
-                    MaterialPageRoute(
-                      builder: (context) => Details(e),
-                    )),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          image: DecorationImage(
-                              image: NetworkImage(e.image!),
-                              fit: BoxFit.cover)),
-                    ),
-                    Container(
-                      alignment: Alignment.bottomCenter,
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                            Color.fromARGB(16, 0, 0, 0),
-                            Color.fromARGB(255, 0, 0, 0),
-                          ])),
-                      child: Text(
-                        e.title!,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ))
-          .cast<Widget>()
-          .toList(),
-      options: CarouselOptions(
-        height: 200,
-        viewportFraction: 1,
-        enlargeCenterPage: true,
-        enlargeStrategy: CenterPageEnlargeStrategy.scale,
-        autoPlay: true,
-      ));
-}
+// class TrendingCards extends StatelessWidget {
+//   final List<Drama> trending;
 
+//   const TrendingCards({super.key, required this.trending});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     Size screen = MediaQuery.of(context).size;
+//     return SizedBox(
+//       width: screen.width,
+//       height: 250,
+//       child: CarouselView(
+//         key: UniqueKey(),
+//         itemExtent: screen.width,
+//         controller: CarouselController(initialItem: 0),
+//         shape: RoundedRectangleBorder(
+//           borderRadius: BorderRadius.circular(10),
+//         ),
+//         itemSnapping: true,
+//         overlayColor: WidgetStateProperty.all(Colors.transparent),
+//         elevation: 0,
+//         children: trending.map((e) {
+//           return InkWell(
+//             enableFeedback: false,
+//             onTap: () => Navigator.push(
+//               context,
+//               MaterialPageRoute(builder: (context) => Details(e)),
+//             ),
+//             child: Stack(
+//               fit: StackFit.expand,
+//               children: [
+//                 Container(
+//                   decoration: BoxDecoration(
+//                     borderRadius: BorderRadius.circular(8),
+//                     image: DecorationImage(
+//                       image: NetworkImage(e.image!),
+//                       fit: BoxFit.cover,
+//                     ),
+//                   ),
+//                 ),
+//                 Positioned(
+//                   bottom: 0,
+//                   left: 0,
+//                   right: 0,
+//                   child: Container(
+//                     padding: const EdgeInsets.symmetric(
+//                         horizontal: 10, vertical: 10),
+//                     decoration: const BoxDecoration(
+//                       gradient: LinearGradient(
+//                         begin: Alignment.topCenter,
+//                         end: Alignment.bottomCenter,
+//                         colors: [
+//                           Color.fromARGB(16, 0, 0, 0),
+//                           Color.fromARGB(255, 0, 0, 0),
+//                         ],
+//                       ),
+//                     ),
+//                     child: Text(
+//                       e.title!,
+//                       textAlign: TextAlign.center,
+//                       maxLines: 1,
+//                       overflow: TextOverflow.ellipsis,
+//                     ),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           );
+//         }).toList(),
+//       ),
+//     );
+//   }
+// }
 
 // myCardList(List<Drama> data, Size screen) {
 //   return SizedBox(
@@ -317,8 +338,6 @@ trendingCards(BuildContext ctx, List<Drama> trending, Size screen) {
 //     ),
 //   );
 // }
-
-
 
 // Container(
 //         alignment: Alignment.center,

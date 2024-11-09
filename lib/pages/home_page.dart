@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:Dramatic/pages/carousel.dart';
 import 'package:Dramatic/pages/dramaDetailsPage.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:extractor/extractor.dart';
@@ -58,7 +59,7 @@ class _HomePageState extends State<HomePage> {
             physics: const ClampingScrollPhysics(),
             children: popular.isNotEmpty
                 ? [
-                    trendingCards(context, spotlight, screen),
+                    TrendingCards(trending: spotlight),
                     Container(
                       margin: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 25),

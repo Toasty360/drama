@@ -61,6 +61,10 @@ class _DetailsState extends State<Details> with SingleTickerProviderStateMixin {
     return DefaultTabController(
         length: 2,
         child: Scaffold(
+          floatingActionButton: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.arrow_back)),
+          floatingActionButtonLocation: FloatingActionButtonLocation.startTop,
           backgroundColor: Colors.black,
           body: ListView(
               physics: const ClampingScrollPhysics(),
@@ -103,7 +107,9 @@ class _DetailsState extends State<Details> with SingleTickerProviderStateMixin {
                             borderRadius: BorderRadius.circular(8),
                             image: DecorationImage(
                                 fit: BoxFit.fitWidth,
-                                image: NetworkImage(widget.item.image!))),
+                                image: NetworkImage(isDataReady
+                                    ? item.image!
+                                    : widget.item.image!))),
                       ),
                     )
                   ],
@@ -160,18 +166,17 @@ class _DetailsState extends State<Details> with SingleTickerProviderStateMixin {
                         : [],
                   ),
                 ),
-                isDataReady
-                    ? Container(
-                        margin: const EdgeInsets.only(top: 10),
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: const Text(
-                          "Description",
-                          style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blueGrey),
-                        ))
-                    : const Center(),
+                if (isDataReady)
+                  Container(
+                      margin: const EdgeInsets.only(top: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: const Text(
+                        "Description",
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blueGrey),
+                      )),
                 Container(
                     margin: const EdgeInsets.only(top: 10),
                     padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -184,148 +189,155 @@ class _DetailsState extends State<Details> with SingleTickerProviderStateMixin {
                           : "",
                       textAlign: TextAlign.justify,
                     )),
-                isDataReady
-                    ? TabBar(
-                        splashFactory: NoSplash.splashFactory,
-                        dividerColor: Colors.transparent,
-                        tabs: const [
-                          Tab(text: 'Episodes'),
-                          Tab(text: 'Actors'),
-                        ],
-                        controller: tabController,
-                        onTap: (int index) {
-                          setState(() {
-                            selectedIndex = index;
-                            tabController.animateTo(index);
-                          });
-                        },
-                      )
-                    : const Center(),
-                IndexedStack(
-                  index: selectedIndex,
-                  children: [
-                    Visibility(
-                      child: item.episodes.runtimeType != Null
-                          ? ListView.builder(
-                              shrinkWrap: true,
-                              physics: const ClampingScrollPhysics(),
-                              itemCount: item.episodes!.length,
-                              itemBuilder: (context, index) {
-                                return GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => MediaPlayer(
-                                            episode: item.episodes![index]
-                                              ..image = item.image,
-                                          ),
-                                        ));
-                                  },
-                                  child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10),
-                                      alignment: Alignment.center,
-                                      height: 60,
-                                      margin: const EdgeInsets.symmetric(
-                                          vertical: 5, horizontal: 20),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        shape: BoxShape.rectangle,
-                                        border: Border.all(
-                                            color:
-                                                Colors.white.withOpacity(0.1)),
-                                        color: Colors.white.withOpacity(0.1),
-                                      ),
-                                      child: Text(
-                                        item.episodes![index].name!,
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(fontSize: 12),
-                                      )),
-                                );
-                              },
-                            )
-                          : const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                    ),
-                    Visibility(
-                      child: item.actors.runtimeType != Null &&
-                              item.actors!.isNotEmpty
-                          ? Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 20),
-                              decoration: BoxDecoration(border: Border.all()),
-                              child: Column(
-                                children: item.actors!
-                                    .map((e) => GestureDetector(
-                                          onTap: () => Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    ActorDetails(actor: e),
-                                              )),
-                                          child: Container(
-                                              width: screen.width,
-                                              margin:
-                                                  const EdgeInsets.symmetric(
-                                                      vertical: 10,
-                                                      horizontal: 10),
-                                              child: Stack(
-                                                children: [
-                                                  Positioned(
-                                                    right: 0,
-                                                    child: Container(
-                                                      alignment:
-                                                          Alignment.center,
-                                                      height: 75,
-                                                      width: screen.width - 90,
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                              left: 20,
-                                                              right: 5),
-                                                      decoration: BoxDecoration(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(8),
-                                                          color: Colors.white
-                                                              .withOpacity(0.1),
-                                                          border: Border.all(
-                                                              color: Colors
-                                                                  .white
-                                                                  .withOpacity(
-                                                                      0.1))),
-                                                      child: Text(
-                                                        e.name!,
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  SizedBox(
+                if (isDataReady)
+                  TabBar(
+                    overlayColor: WidgetStateProperty.all(Colors.transparent),
+                    splashFactory: NoSplash.splashFactory,
+                    dividerColor: Colors.transparent,
+                    tabs: const [
+                      Tab(text: 'Episodes'),
+                      Tab(text: 'Actors'),
+                    ],
+                    controller: tabController,
+                    onTap: (int index) {
+                      setState(() {
+                        selectedIndex = index;
+                        tabController.animateTo(index);
+                      });
+                    },
+                  ),
+                [
+                  Visibility(
+                    maintainSize: false,
+                    child: item.episodes.runtimeType != Null
+                        ? item.episodes!.isNotEmpty
+                            ? ListView.builder(
+                                shrinkWrap: true,
+                                physics: const ClampingScrollPhysics(),
+                                itemCount: item.episodes!.length,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 10),
+                                itemBuilder: (context, index) {
+                                  return GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => MediaPlayer(
+                                              episode: item.episodes![index]
+                                                ..image = item.image,
+                                            ),
+                                          ));
+                                    },
+                                    child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10),
+                                        alignment: Alignment.center,
+                                        height: 60,
+                                        margin: const EdgeInsets.symmetric(
+                                            vertical: 5, horizontal: 20),
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          shape: BoxShape.rectangle,
+                                          border: Border.all(
+                                              color: Colors.white
+                                                  .withOpacity(0.1)),
+                                          color: Colors.white.withOpacity(0.1),
+                                        ),
+                                        child: Text(
+                                          item.episodes![index].name!,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(fontSize: 12),
+                                        )),
+                                  );
+                                },
+                              )
+                            : Container(
+                                margin: const EdgeInsets.only(top: 20),
+                                height: 50,
+                                alignment: Alignment.center,
+                                width: screen.width,
+                                child: const Center(
+                                  child: Text("No Episodes Found :("),
+                                ),
+                              )
+                        : const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                  ),
+                  Visibility(
+                    child: item.actors.runtimeType != Null &&
+                            item.actors!.isNotEmpty
+                        ? Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 20),
+                            decoration: BoxDecoration(border: Border.all()),
+                            child: Column(
+                              children: item.actors!
+                                  .map((e) => InkWell(
+                                        mouseCursor: SystemMouseCursors.click,
+                                        onTap: () => Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  ActorDetails(actor: e),
+                                            )),
+                                        child: Container(
+                                            width: screen.width,
+                                            margin: const EdgeInsets.symmetric(
+                                                vertical: 10, horizontal: 10),
+                                            child: Stack(
+                                              children: [
+                                                Positioned(
+                                                  right: 0,
+                                                  child: Container(
+                                                    alignment: Alignment.center,
                                                     height: 75,
-                                                    width: 75,
-                                                    child: ClipRRect(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              50),
-                                                      child: Image.network(
-                                                          e.image!,
-                                                          fit: BoxFit.cover,
-                                                          alignment: Alignment
-                                                              .topCenter),
+                                                    width: screen.width - 90,
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            left: 20, right: 5),
+                                                    decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(8),
+                                                        color: Colors.white
+                                                            .withOpacity(0.1),
+                                                        border: Border.all(
+                                                            color: Colors.white
+                                                                .withOpacity(
+                                                                    0.1))),
+                                                    child: Text(
+                                                      e.name!,
+                                                      textAlign:
+                                                          TextAlign.center,
                                                     ),
                                                   ),
-                                                ],
-                                              )),
-                                        ))
-                                    .toList()
-                                    .cast<Widget>(),
-                              ))
-                          : const Center(),
-                    )
-                  ],
-                )
+                                                ),
+                                                SizedBox(
+                                                  height: 75,
+                                                  width: 75,
+                                                  child: ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            50),
+                                                    child: Image.network(
+                                                        e.image!,
+                                                        fit: BoxFit.cover,
+                                                        alignment: Alignment
+                                                            .topCenter),
+                                                  ),
+                                                ),
+                                              ],
+                                            )),
+                                      ))
+                                  .toList()
+                                  .cast<Widget>(),
+                            ))
+                        : const Center(),
+                  )
+                ][selectedIndex],
               ]),
         ));
   }

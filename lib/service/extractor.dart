@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
 
-const String baseURL = "https://asianc.sh/";
+const String baseURL = "https://asianc.co/";
 final key = encrypt.Key.fromBase64(
     base64.encode(utf8.encode("93422192433952489752342908585752")));
 final iv =
